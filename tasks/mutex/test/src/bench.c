@@ -73,7 +73,10 @@ int main(int argc, const char **argv)
         pthread_join(threads[workers_ix], NULL);
     }
 
+    printf("shared counter = %zu\n", shared_counter);
+
     free(threads);
+    mutex_deinit(&shared_counter_mutex);
     mutex_lib_deinit();
 
     return EXIT_SUCCESS;

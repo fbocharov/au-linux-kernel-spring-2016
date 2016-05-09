@@ -100,5 +100,6 @@ int main(void)
 {
     test_once();
     test_once();
+    printf("Passed!\n");
     return EXIT_SUCCESS;
 }
