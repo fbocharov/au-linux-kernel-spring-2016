@@ -79,8 +79,8 @@ do {                                                     \
                                                          \
     hlist_for_each_safe(node, tmp, &(tgstate)->mlist) {  \
         mutex = hlist_entry(node, tgroup_mutex_t, hnode);\
-        wake_up_interruptible_all(&mutex->wqh);          \
         hlist_del(&mutex->hnode);                        \
+        wake_up_interruptible_all(&mutex->wqh);          \
         kfree(mutex);                                    \
     }                                                    \
     kfree((tgstate));                                    \
@@ -175,10 +175,8 @@ static long mutex_ioctl_lock_create(mutex_ioctl_lock_create_arg_t __user *uarg)
     mutex_ioctl_lock_create_arg_t arg;
 
     mutex = (tgroup_mutex_t *) kzalloc(sizeof(*mutex), GFP_KERNEL);
-    if (!mutex) {
-        pr_notice(LOG_TAG "Mutex module out of memory!\n");
+    if (!mutex)
         return -ENOMEM;
-    }
 
     spin_lock_init(&mutex->wlock);
     init_waitqueue_head(&mutex->wqh);
@@ -187,7 +185,6 @@ static long mutex_ioctl_lock_create(mutex_ioctl_lock_create_arg_t __user *uarg)
     mstate = lookup_tgroup_mutex_state(current->tgid);
     if (!mstate) {
         rcu_read_unlock();
-        pr_notice(LOG_TAG "Mutex library didn't init for this process!\n");
         ret = -EINVAL;
         goto err;
     }
@@ -195,7 +192,6 @@ static long mutex_ioctl_lock_create(mutex_ioctl_lock_create_arg_t __user *uarg)
     arg.id = mutex->id;
     if (copy_to_user(uarg, &arg, sizeof(arg))) {
         rcu_read_unlock();
-        pr_notice(LOG_TAG "Copy to user failed :(\n");
         ret = -EFAULT;
         goto err;
     }
@@ -375,7 +371,7 @@ static struct file_operations mutex_dev_fops = {
 
 static int __init mutex_module_init(void)
 {
-    long ret = 0;
+    int ret = 0;
     mutex_dev = (mutex_dev_t*)
         kzalloc(sizeof(*mutex_dev), GFP_KERNEL);
     if (!mutex_dev) {
